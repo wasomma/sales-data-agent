@@ -1,10 +1,11 @@
 [project]
 name = "sales-data-agent"
-version = "0.1.0"
+version = "0.3.0"
 description = "CLI agent that answers natural-language questions about sales data via text-to-SQL over DuckDB"
 requires-python = ">=3.11"
 dependencies = [
     "anthropic>=0.60",
+    "mcp>=1.2",
     "duckdb>=1.0",
     "pandas>=2.2",
     "openpyxl>=3.1",

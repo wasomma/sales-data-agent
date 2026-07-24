@@ -7,18 +7,26 @@ Excel and PowerPoint exports are ingested into a local DuckDB database; an
 LLM agent translates questions into SQL, executes it read-only, and shows the
 query alongside every answer.
 
-**Current LLM:** Claude (`claude-opus-5`) behind a provider abstraction —
-swapping to the company-authorized Gemini API later means changing only
-`src/sales_agent/llm.py`. Until then, all testing uses **synthetic data**; no
-company data is sent to any API. See [DESIGN.md](DESIGN.md) for the full
-architecture.
+**LLM backends** (picked automatically):
+
+1. **Claude subscription (default)** — no API key needed. Drives headless
+   Claude Code (`claude -p`), which uses your Claude login; the agent's tools
+   are served to it via a local MCP server.
+2. **Anthropic API** (`claude-opus-5`) — used when `ANTHROPIC_API_KEY` is set.
+3. **Gemini** (planned) — drops into `src/sales_agent/llm.py` when the
+   company-authorized key is available.
+
+Force a backend with `SALES_AGENT_BACKEND=api|claude-code`. Until real data is
+authorized, all testing uses **synthetic data**. See [DESIGN.md](DESIGN.md)
+for the architecture and [CHANGELOG.md](CHANGELOG.md) for release history.
 
 ## Quick start
 
 ```bash
 python -m venv .venv
 .venv\Scripts\pip install -e ".[dev]"
-copy .env.example .env      # then put your ANTHROPIC_API_KEY in .env
+# No API key needed if Claude Code is installed and logged in.
+# (Optional: copy .env.example to .env and set ANTHROPIC_API_KEY to use the API.)
 
 .venv\Scripts\sales generate-sample   # writes synthetic exports to data/inbox
 .venv\Scripts\sales sync              # ingests them into DuckDB
@@ -38,7 +46,9 @@ files are skipped by content hash). To use real exports later, drop them into
 | `src/sales_agent/db.py` | DuckDB schema: `deals` + deduped `deals_snapshots` / `deals_current` views |
 | `src/sales_agent/generate.py` | Deterministic synthetic dataset (two snapshots + QBR deck) |
 | `src/sales_agent/tools.py` | Agent tools: `get_schema`, `run_sql` (read-only), `list_sources` |
-| `src/sales_agent/llm.py` | Provider abstraction (ClaudeProvider now, GeminiProvider later) |
+| `src/sales_agent/llm.py` | API provider abstraction (ClaudeProvider now, GeminiProvider later) |
+| `src/sales_agent/claude_code.py` | Subscription backend: headless Claude Code + MCP tools |
+| `src/sales_agent/mcp_server.py` | MCP server exposing the tools over stdio |
 | `src/sales_agent/agent.py` | Provider-agnostic tool loop; prints executed SQL |
 | `src/sales_agent/cli.py` | Typer CLI: `generate-sample`, `sync`, `status`, `ask`, `chat` |
 

@@ -10,6 +10,23 @@ app = typer.Typer(help="Ask natural-language questions about your sales data.",
 console = Console()
 
 
+def _make_agent(show_sql: bool):
+    """Pick the LLM backend.
+
+    Priority: SALES_AGENT_BACKEND env override ('api' | 'claude-code'), else the
+    direct API if ANTHROPIC_API_KEY is set, else headless Claude Code (works
+    with a Claude subscription — no API key needed).
+    """
+    import os
+
+    backend = os.getenv("SALES_AGENT_BACKEND")
+    if backend == "api" or (backend is None and os.getenv("ANTHROPIC_API_KEY")):
+        from .agent import SalesAgent
+        return SalesAgent(console=console, show_sql=show_sql)
+    from .claude_code import ClaudeCodeBackend
+    return ClaudeCodeBackend(console=console, show_sql=show_sql)
+
+
 @app.command("generate-sample")
 def generate_sample():
     """Write a deterministic synthetic dataset into data/inbox."""
@@ -45,8 +62,7 @@ def status():
 def ask(question: str = typer.Argument(..., help="A question about your sales data."),
         no_sql: bool = typer.Option(False, "--no-sql", help="Hide the executed SQL.")):
     """One-shot question, e.g.: sales ask "top 10 largest deals for 2026" """
-    from .agent import SalesAgent
-    agent = SalesAgent(console=console, show_sql=not no_sql)
+    agent = _make_agent(show_sql=not no_sql)
     with console.status("thinking..."):
         answer = agent.ask(question)
     console.print(Markdown(answer))
@@ -55,8 +71,7 @@ def ask(question: str = typer.Argument(..., help="A question about your sales da
 @app.command()
 def chat(no_sql: bool = typer.Option(False, "--no-sql", help="Hide the executed SQL.")):
     """Interactive chat session (Ctrl+C or 'exit' to quit)."""
-    from .agent import SalesAgent
-    agent = SalesAgent(console=console, show_sql=not no_sql)
+    agent = _make_agent(show_sql=not no_sql)
     console.print("[bold]sales-data-agent[/bold] — ask about your pipeline. 'exit' to quit.\n")
     while True:
         try:

@@ -54,18 +54,17 @@ _SELECT_RE = re.compile(r"^\s*(SELECT|WITH)\b", re.IGNORECASE)
 def get_schema() -> str:
     con = connect_ro()
     try:
-        lines = []
-        for (table,) in con.execute(
-            "SELECT table_name FROM information_schema.tables "
+        # NOTE: no parameterized queries here — DuckDB prepared statements against
+        # information_schema deadlock inside the MCP server's worker thread.
+        rows = con.execute(
+            "SELECT table_name, column_name, data_type FROM information_schema.columns "
             "WHERE table_name IN ('deals_snapshots', 'deals_current', 'ingest_log', 'slide_text') "
-            "ORDER BY table_name"
-        ).fetchall():
-            cols = con.execute(
-                "SELECT column_name, data_type FROM information_schema.columns "
-                "WHERE table_name = ? ORDER BY ordinal_position", [table]
-            ).fetchall()
-            col_desc = ", ".join(f"{c} {t}" for c, t in cols)
-            lines.append(f"{table}({col_desc})")
+            "ORDER BY table_name, ordinal_position"
+        ).fetchall()
+        by_table: dict[str, list[str]] = {}
+        for table, col, dtype in rows:
+            by_table.setdefault(table, []).append(f"{col} {dtype}")
+        lines = [f"{table}({', '.join(cols)})" for table, cols in by_table.items()]
 
         lines.append("")
         lines.append("deals_current = latest snapshot per deal (use for 'as of now' questions).")
