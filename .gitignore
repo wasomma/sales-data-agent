@@ -10,6 +10,11 @@ data/
 *.pptx
 *.csv
 
+# Exception: sample-data/ holds SYNTHETIC demo files only (see its README).
+# Never put real exports there — they would be committed.
+!sample-data/*.xlsx
+!sample-data/*.pptx
+
 # Python
 __pycache__/
 *.py[cod]

@@ -5,6 +5,15 @@ All notable changes to this project are documented here. The format follows
 [Semantic Versioning](https://semver.org/). Each release is a git tag (`v0.x.y`)
 pointing at the push that shipped it.
 
+## [0.3.1] - 2026-07-24
+
+### Added
+- `sample-data/` folder with committed reference copies of the synthetic
+  dataset (two pipeline snapshots + QBR deck) for easy viewing and demos. The
+  agent does not read this folder; `data/inbox/` remains the git-ignored
+  ingestion path for real data. Narrow `.gitignore` exceptions added for
+  `sample-data/*.xlsx` and `sample-data/*.pptx` only, with a warning README.
+
 ## [0.3.0] - 2026-07-24
 
 ### Added
@@ -57,6 +66,7 @@ pointing at the push that shipped it.
   `.gitignore` that keeps company data (spreadsheets, decks, DuckDB files, API
   keys) out of the repo.
 
+[0.3.1]: https://github.com/wasomma/sales-data-agent/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/wasomma/sales-data-agent/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/wasomma/sales-data-agent/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/wasomma/sales-data-agent/releases/tag/v0.1.0
