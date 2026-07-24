@@ -1,0 +1,28 @@
+# Secrets
+.env
+
+# Data — never commit company sales data
+data/
+*.duckdb
+*.duckdb.wal
+*.xlsx
+*.xlsm
+*.pptx
+*.csv
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.ruff_cache/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
