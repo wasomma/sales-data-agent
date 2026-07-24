@@ -1,7 +1,13 @@
 # Sales Data Agent — Design Document
 
-**Status:** Draft v1 — 2026-07-24
+**Status:** Draft v2 — 2026-07-24
 **Owner:** wasomma@gmail.com
+
+> **v2 change:** The company Gemini API key is not yet available. Phase 1 uses the
+> **Claude API** (`claude-opus-5`) behind a thin provider abstraction, and tests
+> against **synthetic sales data** only. When the Gemini key arrives, a
+> `GeminiProvider` drops in and real exports replace the synthetic files.
+> No company data is sent to any API until then.
 
 ## 1. Summary
 
@@ -165,10 +171,16 @@ the schema ports to Postgres nearly unchanged.
 `sales ask "top 10 largest deals for 2026"`.
 
 ### 6.2 Model
-Gemini via the business-authorized API key, using **function calling**. Default to a
-fast model (e.g. `gemini-2.5-flash`-class) — text-to-SQL over a known schema doesn't
-need the largest model; make the model id a config value and verify current model
-names at implementation time.
+The agent talks to the LLM through a small **provider interface** (`llm.py`): the
+provider receives the conversation + tool definitions and returns either tool calls
+or a final answer. Two implementations:
+
+- **ClaudeProvider (current)** — Anthropic SDK, model `claude-opus-5` (configurable
+  via `SALES_AGENT_MODEL`), native tool use. Used for all development against
+  synthetic data.
+- **GeminiProvider (later)** — Gemini function calling via the business-authorized
+  key, added when access is granted. Only this file changes; tools, ingestion, and
+  CLI are provider-agnostic.
 
 ### 6.3 Tools exposed to the model
 
@@ -195,9 +207,12 @@ retrying on SQL errors) → model summarizes actual results.
 
 ### Phase 1 — prove the value chain  *(scope of first build)*
 Inbox folder → ingest → DuckDB → `sales chat` answering aggregate questions
-correctly, SQL shown. Includes a synthetic sample dataset so the pipeline is testable
-before real exports are dropped in. Exit criteria: the two motivating example
-questions answered correctly against real exports.
+correctly, SQL shown. A deterministic **synthetic data generator**
+(`sales generate-sample`) produces realistic pipeline exports — two Excel snapshots
+with drift between them plus a QBR deck with an embedded table — so the whole chain
+is testable end-to-end with zero company data. Exit criteria: the two motivating
+example questions answered correctly against the synthetic dataset (and later,
+against real exports once the Gemini key + data authorization are in place).
 
 ### Phase 2 — freshness and history
 Cloud-storage sync (Microsoft Graph and/or Drive API, delta queries) replacing the
@@ -218,7 +233,7 @@ shared interface (web or Slack) if the team wants access.
 | Excel parsing | pandas + openpyxl |
 | PowerPoint parsing | python-pptx |
 | Database | DuckDB |
-| LLM | Gemini API (`google-genai` SDK), function calling |
+| LLM | Claude API (`anthropic` SDK, `claude-opus-5`) now; Gemini API later via provider swap |
 | Config | `mapping.yaml` + `.env` for the API key (git-ignored) |
 | Tests | pytest; golden-file tests for ingestion, canned Q→SQL cases for the agent |
 

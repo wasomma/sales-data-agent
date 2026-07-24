@@ -1,0 +1,40 @@
+# Maps source spreadsheet/slide-table column headers to the canonical schema.
+# Matching is case-insensitive and ignores surrounding whitespace.
+# When real CRM exports arrive, extend the alias lists here — no code changes needed.
+column_aliases:
+  deal_name:
+    - "Deal"
+    - "Deal Name"
+    - "Opportunity"
+    - "Opportunity Name"
+  account:
+    - "Account"
+    - "Account Name"
+    - "Customer"
+  amount:
+    - "Amount"
+    - "Deal Value"
+    - "ACV"
+    - "ACV ($)"
+    - "Amount (USD)"
+  close_date:
+    - "Close Date"
+    - "Expected Close"
+    - "Close"
+  stage:
+    - "Stage"
+    - "Sales Stage"
+    - "Deal Stage"
+  owner:
+    - "Owner"
+    - "Rep"
+    - "Deal Owner"
+    - "Account Executive"
+  forecast_category:
+    - "Forecast Category"
+    - "Forecast"
+    - "Category"
+
+# Optional: columns matching these canonical names are dropped before any row is
+# stored or sent to the LLM (e.g. personal contact details in real exports).
+excluded_columns: []

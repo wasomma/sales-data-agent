@@ -26,3 +26,6 @@ build/
 Thumbs.db
 .vscode/
 .idea/
+
+# Virtualenv
+.venv/
