@@ -7,6 +7,22 @@ real company data.
 The target box already serves other sites from one Caddyfile. **Append** the
 site block below; never rewrite that file.
 
+## Live deployment (as built 2026-07-26)
+
+| | |
+|---|---|
+| URL | https://wasomma-sales.duckdns.org (basic auth, user `demo`) |
+| Host | `guild-vps` — shared with guild-mp (:8787) and fpv-sim (:8080) |
+| Path | `/opt/sales-demo`, checked out at tag v0.5.0 |
+| Port | 8140, bound to `127.0.0.1` only |
+| Service | `sales-demo.service`, runs as `www-data`, enabled at boot |
+| Caddyfile backup | `/etc/caddy/Caddyfile.bak-before-sales-demo` |
+
+DNS is a DuckDNS **A record** to `2.24.126.188` (IPv4 only, mirroring the fpv
+domain). The box needed `python3.12-venv` installed before a venv could be built.
+
+Rollback: `cp /etc/caddy/Caddyfile.bak-before-sales-demo /etc/caddy/Caddyfile && systemctl reload caddy`
+
 ## 1. Code and dependencies
 
 ```bash
