@@ -49,6 +49,28 @@ It binds to `127.0.0.1` (your machine only) and holds one conversation, so
 follow-ups keep their context; **New chat** clears it. The UI needs the `web`
 extra (`pip install -e ".[web]"`); without it the CLI commands still work.
 
+## Demo mode (for public hosting)
+
+The live backends run on a Claude subscription login or an API key — neither
+belongs behind a public URL, where anyone who finds it could spend your quota.
+For demonstrations there is a third backend that never calls an LLM:
+
+```bash
+sales record-demo                     # run the demo questions through the real agent once
+set SALES_AGENT_BACKEND=replay        # (export ... on Linux)
+sales serve
+```
+
+`record-demo` captures genuine exchanges — real SQL, real prose — into
+`demo/recording.json`. `SALES_AGENT_BACKEND=replay` then serves those
+recordings: no LLM call, no quota, no cost, nothing to abuse. The UI says
+plainly that it is replaying, lists exactly the questions it can answer, and
+tells the user so rather than guessing at anything else.
+
+> **Only ever run `record-demo` against the synthetic dataset.** The recording
+> is committed to git and contains the actual figures from whatever data was
+> loaded at the time.
+
 `sales status` lists ingested files; `sales sync` is idempotent (unchanged
 files are skipped by content hash). To use real exports later, drop them into
 `data/inbox/` — column-header variations are handled via `mapping.yaml`.
@@ -66,6 +88,7 @@ files are skipped by content hash). To use real exports later, drop them into
 | `src/sales_agent/mcp_server.py` | MCP server exposing the tools over stdio |
 | `src/sales_agent/agent.py` | Provider-agnostic tool loop; emits SQL as it runs |
 | `src/sales_agent/backend.py` | Backend selection shared by the CLI and web UI |
+| `src/sales_agent/replay.py` | Demo backend: replays `demo/recording.json`, never calls an LLM |
 | `src/sales_agent/web.py` | FastAPI server: SSE streaming chat endpoint |
 | `src/sales_agent/static/index.html` | The chat UI (no build step, no CDN) |
 | `src/sales_agent/cli.py` | Typer CLI: `generate-sample`, `sync`, `status`, `ask`, `chat`, `serve` |

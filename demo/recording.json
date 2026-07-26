@@ -1,0 +1,114 @@
+{
+  "recorded": "2026-07-26",
+  "dataset": "sales_pipeline_2026-06-30.xlsx | as_of=2026-06-30 | rows=120 | rejected=0 | ingested=2026-07-24 17:07:22.488294\nqbr_deck_2026-07-21.pptx | as_of=2026-07-21 | rows=10 | rejected=0 | ingested=2026-07-24 17:07:22.024010\nsales_pipeline_2026-07-21.xlsx | as_of=2026-07-21 | rows=128 | rejected=0 | ingested=2026-07-24 17:07:23.006341",
+  "exchanges": [
+    {
+      "question": "What are my top 10 largest deals closing in 2026?",
+      "events": [
+        {
+          "type": "tool",
+          "name": "ToolSearch"
+        },
+        {
+          "type": "tool",
+          "name": "get_schema"
+        },
+        {
+          "type": "sql",
+          "query": "SELECT deal_name, account, amount, close_date, stage, owner, forecast_category FROM deals_current WHERE close_date BETWEEN '2026-01-01' AND '2026-12-31' AND stage NOT IN ('Closed Won','Closed Lost') ORDER BY amount DESC LIMIT 10"
+        }
+      ],
+      "answer": "Here are your top 10 largest open deals with a 2026 close date (data as of 2026-07-21):\n\n| # | Deal | Account | Amount | Close Date | Stage | Owner |\n|---|------|---------|--------|------------|-------|-------|\n| 1 | Keystone Enterprise Rollout 715 | Keystone Pharma | $654.5K | 2026-12-08 | Negotiation | Alex Chen |\n| 2 | Ironclad Enterprise Rollout 253 | Ironclad Security | $654.0K | 2026-11-11 | Negotiation | Dan Kowalski |\n| 3 | BlueSky Enterprise Rollout 332 | BlueSky Airlines | $653.5K | 2026-04-21 | Qualification | Sofia Reyes |\n| 4 | Juniper Support Upgrade 521 | Juniper Media | $653.5K | 2026-09-27 | Prospecting | Marcus Webb |\n| 5 | Apex Enterprise Rollout 108 | Apex Manufacturing | $652.5K | 2026-10-09 | Negotiation | Dan Kowalski |\n| 6 | Apex Data Migration 108 | Apex Manufacturing | $651.0K | 2026-04-27 | Qualification | Alex Chen |\n| 7 | Delta Pilot Program 112 | Delta Retail Group | $650.0K | 2026-01-07 | Qualification | Marcus Webb |\n| 8 | Cascade Enterprise Rollout 283 | Cascade Health | $523.3K | 2026-12-22 | Qualification | Marcus Webb |\n| 9 | Northwind Renewal 272 | Northwind Logistics | $404.5K | 2026-01-27 | Proposal | Dan Kowalski |\n| 10 | Fairbanks Support Upgrade 458 | Fairbanks Financial | $404.5K | 2026-08-13 | Qualification | Alex Chen |\n\nI excluded deals already marked Closed Won or Closed Lost. Note that four of these (BlueSky, Apex Data Migration, Delta, Northwind) have close dates that are already in the past but are still open in the CRM — their dates likely need updating."
+    },
+    {
+      "question": "Total pipeline by stage",
+      "events": [
+        {
+          "type": "tool",
+          "name": "ToolSearch"
+        },
+        {
+          "type": "tool",
+          "name": "get_schema"
+        },
+        {
+          "type": "sql",
+          "query": "SELECT stage, COUNT(*) AS deals, SUM(amount) AS total_amount FROM deals_current WHERE stage NOT IN ('Closed Won','Closed Lost') GROUP BY stage ORDER BY total_amount DESC"
+        }
+      ],
+      "answer": "Total open pipeline is **$19.7M across 95 deals** (as of the 2026-07-21 snapshot):\n\n| Stage | Deals | Amount |\n|---|---|---|\n| Prospecting | 25 | $6.1M |\n| Qualification | 29 | $5.5M |\n| Negotiation | 23 | $4.6M |\n| Proposal | 18 | $3.5M |\n\nClosed Won/Lost deals are excluded — let me know if you'd like those included too."
+    },
+    {
+      "question": "Which deals slipped since the last snapshot?",
+      "events": [
+        {
+          "type": "tool",
+          "name": "ToolSearch"
+        },
+        {
+          "type": "tool",
+          "name": "get_schema"
+        },
+        {
+          "type": "sql",
+          "query": "SELECT prev.deal_name, prev.account, curr.owner, curr.amount, prev.close_date AS old_close, curr.close_date AS new_close, curr.close_date - prev.close_date AS days_slipped, prev.stage AS old_stage, curr.stage AS new_stage FROM deals_snapshots prev JOIN deals_snapshots curr ON prev.deal_key = curr.deal_key AND prev.as_of_date = DATE '2026-06-30' AND curr.as_of_date = DATE '2026-07-21' WHERE curr.close_date > prev.close_date ORDER BY days_slipped DESC, curr.amount DESC"
+        }
+      ],
+      "answer": "**9 deals slipped between the 2026-06-30 and 2026-07-21 snapshots, totaling about $1.45M in pipeline.** Notably, every one of them slipped by exactly 91 days (roughly one quarter), and none changed stage — which looks like a systematic quarter push rather than deal-by-deal renegotiation.\n\n| Deal | Account | Owner | Amount | Old close | New close |\n|---|---|---|---|---|---|\n| BlueSky Data Migration 201 | BlueSky Airlines | Alex Chen | $403K | 2026-06-03 | 2026-09-02 |\n| Granite Data Migration 712 | Granite Insurance | Marcus Webb | $401K | 2026-02-13 | 2026-05-15 |\n| Evergreen Enterprise Rollout 639 | Evergreen Energy | Marcus Webb | $184K | 2026-10-16 | 2027-01-15 |\n| Keystone Expansion 301 | Keystone Pharma | Alex Chen | $182K | 2027-05-15 | 2027-08-14 |\n| Delta Support Upgrade 310 | Delta Retail Group | Dan Kowalski | $123K | 2026-05-07 | 2026-08-06 |\n| Keystone Enterprise Rollout 693 | Keystone Pharma | Sofia Reyes | $86K | 2026-12-10 | 2027-03-11 |\n| Cascade Data Migration 971 | Cascade Health | Priya Patel | $44K | 2026-08-07 | 2026-11-06 |\n| Northwind Pilot Program 274 | Northwind Logistics | Sofia Reyes | $17K | 2027-04-11 | 2027-07-11 |\n| Juniper Platform License 699 | Juniper Media | Marcus Webb | $16K | 2026-02-05 | 2026-05-07 |\n\nTwo of these (Granite Data Migration 712 and Juniper Platform License 699) had already blown past their original close dates before the push, and Granite's new date (2026-05-15) is still in the past as of the 07-21 snapshot — worth a closer look."
+    },
+    {
+      "question": "Who are my top 5 reps by open pipeline?",
+      "events": [
+        {
+          "type": "tool",
+          "name": "ToolSearch"
+        },
+        {
+          "type": "tool",
+          "name": "get_schema"
+        },
+        {
+          "type": "sql",
+          "query": "SELECT owner, COUNT(*) AS open_deals, SUM(amount) AS open_pipeline FROM deals_current WHERE stage NOT IN ('Closed Won', 'Closed Lost') GROUP BY owner ORDER BY open_pipeline DESC LIMIT 5"
+        }
+      ],
+      "answer": "Here are your top 5 reps by open pipeline (all non-closed deals, as of the 2026-07-21 snapshot) — note that's all five reps in the data:\n\n| Rep | Open deals | Open pipeline |\n|---|---|---|\n| Dan Kowalski | 25 | $5.0M |\n| Marcus Webb | 18 | $4.7M |\n| Alex Chen | 16 | $4.2M |\n| Sofia Reyes | 19 | $3.7M |\n| Priya Patel | 17 | $2.1M |\n\nDan Kowalski leads at ~$5.0M, and total open pipeline across the team is ~$19.7M."
+    },
+    {
+      "question": "What is the average deal size by stage?",
+      "events": [
+        {
+          "type": "tool",
+          "name": "ToolSearch"
+        },
+        {
+          "type": "tool",
+          "name": "get_schema"
+        },
+        {
+          "type": "sql",
+          "query": "SELECT stage, COUNT(*) AS deals, ROUND(AVG(amount), 0) AS avg_amount FROM deals_current GROUP BY stage ORDER BY avg_amount DESC"
+        }
+      ],
+      "answer": "Average deal size by stage (latest snapshot, as of 2026-07-21):\n\n| Stage | Deals | Avg deal size |\n|---|---|---|\n| Prospecting | 25 | $244K |\n| Negotiation | 23 | $200K |\n| Proposal | 18 | $195K |\n| Closed Won | 23 | $194K |\n| Qualification | 29 | $189K |\n| Closed Lost | 10 | $175K |\n\nProspecting deals are the largest on average ($244K), while Closed Lost deals are the smallest ($175K). The other stages cluster fairly tightly around $190–200K."
+    },
+    {
+      "question": "How much is forecast to close this quarter?",
+      "events": [
+        {
+          "type": "tool",
+          "name": "ToolSearch"
+        },
+        {
+          "type": "tool",
+          "name": "get_schema"
+        },
+        {
+          "type": "sql",
+          "query": "SELECT forecast_category, stage, COUNT(*) AS deals, SUM(amount) AS total FROM deals_current WHERE close_date BETWEEN DATE '2026-07-01' AND DATE '2026-09-30' GROUP BY forecast_category, stage ORDER BY forecast_category, stage"
+        }
+      ],
+      "answer": "**$753K is in Commit for Q3 2026** (deals with close dates July 1 – September 30), on top of **$1.57M already Closed Won** this quarter — so the quarter is tracking to roughly **$2.33M** if all committed deals land. Data is as of 2026-07-21.\n\nBreakdown of open Q3 pipeline by forecast category:\n\n| Forecast category | Deals | Amount |\n|---|---|---|\n| Commit | 6 | $753K |\n| Best Case | 1 | $405K |\n| Pipeline | 7 | $1.28M |\n| Closed Won (already booked) | 4 | $1.57M |\n\nIncluding Best Case, the upside scenario is about $2.73M. Let me know if you'd like this broken down by owner or account."
+    }
+  ]
+}

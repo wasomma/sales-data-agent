@@ -16,6 +16,9 @@ def make_backend(console: Console | None = None, show_sql: bool = True,
                  on_event: EventHandler | None = None):
     """Return a backend exposing .ask(question) -> str and .reset()."""
     backend = os.getenv("SALES_AGENT_BACKEND")
+    if backend == "replay":
+        from .replay import ReplayBackend
+        return ReplayBackend(console=console, show_sql=show_sql, on_event=on_event)
     if backend == "api" or (backend is None and os.getenv("ANTHROPIC_API_KEY")):
         from .agent import SalesAgent
         return SalesAgent(console=console, show_sql=show_sql, on_event=on_event)
@@ -23,9 +26,15 @@ def make_backend(console: Console | None = None, show_sql: bool = True,
     return ClaudeCodeBackend(console=console, show_sql=show_sql, on_event=on_event)
 
 
+def is_replay() -> bool:
+    return os.getenv("SALES_AGENT_BACKEND") == "replay"
+
+
 def backend_name() -> str:
     """Human-readable label for the backend make_backend() would pick."""
     backend = os.getenv("SALES_AGENT_BACKEND")
+    if backend == "replay":
+        return "Demo — recorded answers"
     if backend == "api" or (backend is None and os.getenv("ANTHROPIC_API_KEY")):
         return "Anthropic API"
     return "Claude subscription"

@@ -14,7 +14,7 @@ from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 
-from .backend import backend_name, make_backend
+from .backend import backend_name, is_replay, make_backend
 from .tools import list_sources
 
 STATIC_DIR = Path(__file__).parent / "static"
@@ -40,13 +40,43 @@ def index() -> FileResponse:
     return FileResponse(STATIC_DIR / "index.html")
 
 
+DEFAULT_EXAMPLES = [
+    "What are my top 10 largest deals closing in 2026?",
+    "Which deals slipped since the last snapshot?",
+    "Total pipeline by stage",
+    "Who has the most at risk this quarter?",
+]
+
+
+def _examples() -> list[str]:
+    """In demo mode the suggestions must be exactly what was recorded."""
+    if not is_replay():
+        return DEFAULT_EXAMPLES
+    try:
+        return _get_backend().questions
+    except Exception:
+        return []
+
+
+def _sources_text() -> str:
+    """Where the data summary comes from.
+
+    In replay mode it is read from the recording, so a demo host needs only the
+    recording file — no DuckDB, no ingested exports, nothing derived from real data.
+    """
+    if is_replay():
+        return _get_backend().recording.get("dataset", "")
+    return list_sources()
+
+
 @app.get("/api/meta")
 def meta() -> JSONResponse:
-    """Backend label and ingested sources, for the header and the empty state."""
+    """Backend label, demo flag, suggestions and ingested sources, for the header."""
+    base = {"backend": backend_name(), "demo": is_replay(), "examples": _examples()}
     try:
-        sources_text = list_sources()
+        sources_text = _sources_text()
     except Exception as e:
-        return JSONResponse({"backend": backend_name(), "sources": [],
+        return JSONResponse({**base, "sources": [],
                              "error": f"Could not read the database: {e}"})
     sources = []
     for line in sources_text.splitlines():
@@ -59,7 +89,7 @@ def meta() -> JSONResponse:
             "as_of": fields.get("as_of", ""),
             "rows": fields.get("rows", ""),
         })
-    return JSONResponse({"backend": backend_name(), "sources": sources,
+    return JSONResponse({**base, "sources": sources,
                          "error": None if sources else sources_text})
 
 

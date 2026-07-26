@@ -5,6 +5,20 @@ All notable changes to this project are documented here. The format follows
 [Semantic Versioning](https://semver.org/). Each release is a git tag (`v0.x.y`)
 pointing at the push that shipped it.
 
+## [0.5.0] - 2026-07-26
+
+### Added
+- **Replay backend for public demos** (`SALES_AGENT_BACKEND=replay`). Serves
+  pre-recorded exchanges from `demo/recording.json` and never calls an LLM, so a
+  hosted demo costs nothing, consumes no subscription quota, and cannot be run up
+  by whoever finds the URL. Unrecognized questions get an honest "this is a demo,
+  here is what I can answer" reply instead of a wrong guess.
+- `sales record-demo` captures those recordings by running the demo questions
+  through the *real* agent once, so the SQL and prose on the demo are genuine.
+  Each question is recorded with a fresh conversation so answers stand alone.
+- The UI reads its suggested questions from the server, so in demo mode the
+  chips are exactly what can be answered, above a banner stating it is replaying.
+
 ## [0.4.0] - 2026-07-26
 
 ### Added

@@ -15,6 +15,10 @@ data/
 !sample-data/*.xlsx
 !sample-data/*.pptx
 
+# demo/recording.json IS committed — it is what the public demo replays.
+# It contains answers, i.e. actual figures from whatever data was loaded when
+# `sales record-demo` ran. Only ever record against the synthetic dataset.
+
 # Python
 __pycache__/
 *.py[cod]
