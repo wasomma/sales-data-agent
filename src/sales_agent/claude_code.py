@@ -18,7 +18,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.syntax import Syntax
 
-from .agent import SYSTEM_PROMPT
+from .agent import SYSTEM_PROMPT, EventHandler
 
 ALLOWED_TOOLS = "mcp__sales__get_schema,mcp__sales__run_sql,mcp__sales__list_sources"
 QUESTION_TIMEOUT_S = 600
@@ -30,7 +30,7 @@ def find_claude() -> str | None:
 
 class ClaudeCodeBackend:
     def __init__(self, console: Console | None = None, show_sql: bool = True,
-                 model: str | None = None):
+                 model: str | None = None, on_event: EventHandler | None = None):
         self.exe = find_claude()
         if not self.exe:
             raise RuntimeError(
@@ -39,9 +39,23 @@ class ClaudeCodeBackend:
             )
         self.console = console or Console()
         self.show_sql = show_sql
+        self.on_event = on_event
         # None = let Claude Code use its configured default model
         self.model = model or os.getenv("SALES_AGENT_CLAUDE_CODE_MODEL")
         self.session_id: str | None = None
+
+    def _emit(self, event: dict) -> None:
+        """Route a progress event to the caller's handler, or print it."""
+        if self.on_event is not None:
+            self.on_event(event)
+        elif self.show_sql and event["type"] == "sql":
+            self.console.print(Panel(
+                Syntax(event["query"], "sql", word_wrap=True),
+                title="SQL", border_style="dim", title_align="left"))
+
+    def reset(self) -> None:
+        """Start a fresh Claude Code session, dropping prior conversation context."""
+        self.session_id = None
 
     def _mcp_config_file(self) -> str:
         """Write the MCP config to a temp file; some Claude Code versions only
@@ -80,11 +94,12 @@ class ClaudeCodeBackend:
         etype = event.get("type")
         if etype == "assistant":
             for block in event.get("message", {}).get("content", []):
-                if (self.show_sql and block.get("type") == "tool_use"
-                        and block["name"].endswith("run_sql")):
-                    self.console.print(Panel(
-                        Syntax(block["input"].get("query", ""), "sql", word_wrap=True),
-                        title="SQL", border_style="dim", title_align="left"))
+                if block.get("type") != "tool_use":
+                    continue
+                if block["name"].endswith("run_sql"):
+                    self._emit({"type": "sql", "query": block["input"].get("query", "")})
+                else:
+                    self._emit({"type": "tool", "name": block["name"].split("__")[-1]})
         elif etype == "result":
             self.session_id = event.get("session_id") or self.session_id
             if event.get("is_error"):

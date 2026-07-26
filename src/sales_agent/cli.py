@@ -11,20 +11,9 @@ console = Console()
 
 
 def _make_agent(show_sql: bool):
-    """Pick the LLM backend.
-
-    Priority: SALES_AGENT_BACKEND env override ('api' | 'claude-code'), else the
-    direct API if ANTHROPIC_API_KEY is set, else headless Claude Code (works
-    with a Claude subscription — no API key needed).
-    """
-    import os
-
-    backend = os.getenv("SALES_AGENT_BACKEND")
-    if backend == "api" or (backend is None and os.getenv("ANTHROPIC_API_KEY")):
-        from .agent import SalesAgent
-        return SalesAgent(console=console, show_sql=show_sql)
-    from .claude_code import ClaudeCodeBackend
-    return ClaudeCodeBackend(console=console, show_sql=show_sql)
+    """Pick the LLM backend (see backend.make_backend for the priority rules)."""
+    from .backend import make_backend
+    return make_backend(console=console, show_sql=show_sql)
 
 
 @app.command("generate-sample")
@@ -86,6 +75,30 @@ def chat(no_sql: bool = typer.Option(False, "--no-sql", help="Hide the executed 
             answer = agent.ask(question)
         console.print(Markdown(answer))
         console.print()
+
+
+@app.command()
+def serve(port: int = typer.Option(8000, help="Port to listen on."),
+          host: str = typer.Option("127.0.0.1", help="Bind address; localhost by default."),
+          open_browser: bool = typer.Option(True, "--open/--no-open",
+                                            help="Open the chat UI in your browser.")):
+    """Start the browser chat UI (Ctrl+C to stop)."""
+    try:
+        from .web import serve as run_server
+    except ImportError:
+        console.print("[red]The web UI needs extra packages.[/red] Install them with:\n"
+                      '  [bold]pip install -e ".[web]"[/bold]')
+        raise typer.Exit(1)
+
+    url = f"http://{'localhost' if host == '127.0.0.1' else host}:{port}"
+    # ASCII only: on Windows a piped stdout defaults to cp1252 and chokes on
+    # characters like the arrow glyph.
+    console.print(f"Sales Data Agent UI at [bold cyan]{url}[/bold cyan]   (Ctrl+C to stop)")
+    if open_browser:
+        import threading
+        import webbrowser
+        threading.Timer(1.0, lambda: webbrowser.open(url)).start()
+    run_server(host=host, port=port)
 
 
 if __name__ == "__main__":

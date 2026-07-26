@@ -5,6 +5,25 @@ All notable changes to this project are documented here. The format follows
 [Semantic Versioning](https://semver.org/). Each release is a git tag (`v0.x.y`)
 pointing at the push that shipped it.
 
+## [0.4.0] - 2026-07-26
+
+### Added
+- **Browser chat UI** — `sales serve` starts a local FastAPI app (`web.py`) and
+  opens a single-page chat front-end (`static/index.html`, no build step and no
+  external assets). Questions are POSTed and the response streams back as
+  Server-Sent Events, so each SQL query appears in the transcript the moment the
+  agent runs it. Binds to `127.0.0.1` only; needs the new `web` extra
+  (`pip install -e ".[web]"`).
+- `backend.py`: backend selection extracted from the CLI so the web UI and the
+  terminal pick the same provider by the same rules.
+- Both backends accept an `on_event` callback and expose `reset()`, so callers
+  other than the terminal can consume progress events (SQL, tool use) and start
+  a fresh conversation.
+
+### Fixed
+- `sales serve` printed a Unicode arrow that crashed on Windows when stdout was
+  a pipe (cp1252 `UnicodeEncodeError`); console output is ASCII now.
+
 ## [0.3.1] - 2026-07-24
 
 ### Added
