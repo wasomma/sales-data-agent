@@ -113,7 +113,8 @@ def record_demo(
             answer = agent.ask(question)
         finally:
             agent.on_event = None
-        if not answer or answer.lower().startswith(("claude code error", "claude code produced")):
+        from .backend import is_error_answer
+        if is_error_answer(answer):
             console.print(f"  [red]failed:[/red] {answer}")
             raise typer.Exit(1)
         sql_count = sum(1 for e in events if e["type"] == "sql")
@@ -134,6 +135,54 @@ def record_demo(
         json.dump(payload, f, indent=2, ensure_ascii=False)
     console.print(f"\n[green]Wrote[/green] {path} ({len(exchanges)} exchanges)")
     console.print("Serve it with: [bold]set SALES_AGENT_BACKEND=replay && sales serve[/bold]")
+
+
+@app.command("setup-agy")
+def setup_agy(
+    write_permissions: bool = typer.Option(
+        False, "--write-permissions",
+        help="Also add the permission rules to agy's settings.json."),
+    check_only: bool = typer.Option(False, "--check", help="Diagnose only, change nothing."),
+):
+    """Wire the sales tools into the Antigravity CLI (the Gemini backend).
+
+    Registers the MCP server in agy's global config. The permission rules are
+    printed rather than applied unless --write-permissions is passed, because
+    they widen what agy may do unprompted on possibly work-owned tooling.
+    """
+    from . import agy_setup
+
+    if not check_only:
+        changed, backup = agy_setup.install_server()
+        if changed:
+            console.print(f"[green]registered[/green] MCP server "
+                          f"'{agy_setup.SERVER_NAME}' in {agy_setup.MCP_CONFIG_PATH}")
+            if backup:
+                console.print(f"[dim]previous config backed up to {backup}[/dim]")
+        else:
+            console.print("MCP server already registered — no change.")
+
+        missing = agy_setup.missing_permissions()
+        if missing and write_permissions:
+            added, backup = agy_setup.apply_permissions()
+            console.print(f"[green]added[/green] permission rules: {', '.join(added)}")
+            if backup:
+                console.print(f"[dim]previous settings backed up to {backup}[/dim]")
+        elif missing:
+            console.print(f"\n[yellow]Permission rules still needed[/yellow] in "
+                          f"{agy_setup.SETTINGS_PATH}:")
+            console.print(agy_setup.permissions_block())
+            console.print("\nApply them with: [bold]sales setup-agy --write-permissions[/bold]")
+
+    console.print("\n[bold]Checks[/bold]")
+    checks = agy_setup.doctor()
+    for ok, message in checks:
+        console.print(f"  [{'green' if ok else 'red'}]{'ok  ' if ok else 'FAIL'}[/] {message}")
+    if all(ok for ok, _ in checks):
+        console.print("\nReady. Try: [bold]set SALES_AGENT_BACKEND=agy && sales ask "
+                      '"total pipeline by stage"[/bold]')
+    else:
+        raise typer.Exit(1)
 
 
 @app.command()

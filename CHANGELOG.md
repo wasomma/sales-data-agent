@@ -5,6 +5,27 @@ All notable changes to this project are documented here. The format follows
 [Semantic Versioning](https://semver.org/). Each release is a git tag (`v0.x.y`)
 pointing at the push that shipped it.
 
+## [Unreleased]
+
+### Added
+- **Gemini backend** (`SALES_AGENT_BACKEND=agy`) driving the headless Antigravity
+  CLI, so the agent can run on a work-provisioned Gemini subscription with no API
+  key — the same trick as the Claude Code backend, different plumbing. Opt-in
+  only: having `agy` on PATH never auto-selects it, because installation says
+  nothing about whether the data may go through that tenant.
+- `sales setup-agy` registers the MCP server in agy's global config and reports
+  what is still missing. Antigravity has no `--mcp-config`, so registration is a
+  one-time machine-level step rather than a per-invocation temp file.
+
+### Notes
+- Three Antigravity differences worth remembering: MCP servers load **only** from
+  `~/.gemini/config/mcp_config.json` (a repo-local `.agents/mcp_config.json` is
+  ignored); the config must be UTF-8 **without a BOM** or agy silently loads no
+  servers at all; and there is no `--allowedTools`, so tool scoping lives in
+  `permissions.allow` as `mcp(sales/*)`.
+- `--output-format stream-json` is undocumented but supported, and is what makes
+  the SQL panels work.
+
 ## [0.5.0] - 2026-07-26
 
 ### Added
