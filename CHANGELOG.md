@@ -5,6 +5,17 @@ All notable changes to this project are documented here. The format follows
 [Semantic Versioning](https://semver.org/). Each release is a git tag (`v0.x.y`)
 pointing at the push that shipped it.
 
+## [0.6.1] - 2026-07-27
+
+### Fixed
+- **A malformed `run_sql` call no longer kills the question.** Gemini occasionally
+  emits `run_sql` with empty arguments; pydantic rejected the call before reaching
+  the tool body, and Antigravity treats a failed tool *call* as fatal — so one bad
+  call ended the whole run. `query` now has a default and an omitted query comes
+  back as correctable text, which the model can retry from. The advertised schema
+  still marks `query` as required. Found when the first Gemini run of the six demo
+  questions died on question 1; all six pass after the fix.
+
 ## [0.6.0] - 2026-07-27
 
 ### Added
