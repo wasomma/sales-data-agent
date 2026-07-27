@@ -5,6 +5,27 @@ All notable changes to this project are documented here. The format follows
 [Semantic Versioning](https://semver.org/). Each release is a git tag (`v0.x.y`)
 pointing at the push that shipped it.
 
+## [Unreleased]
+
+### Added
+- **`GeminiProvider`** — Gemini through the google-genai SDK with native function
+  calling, selected by `SALES_AGENT_PROVIDER=gemini`. This is the path llm.py was
+  designed around: the existing agent loop, tools and CLI are unchanged, and the
+  tool schemas are handed to Gemini verbatim via `parameters_json_schema` rather
+  than restated in a second dialect that could drift.
+- `.env.example` now documents every backend and provider switch in one place.
+- New `gemini` extra: `pip install -e ".[gemini]"`.
+
+### Notes
+- Two Gemini paths now exist and are not interchangeable: `SALES_AGENT_BACKEND=agy`
+  (work subscription, via the Antigravity CLI, no key) and
+  `SALES_AGENT_PROVIDER=gemini` (API key, direct). They take separate model
+  settings, since Antigravity model ids are not API model ids.
+- Anthropic pairs a tool result to its call by id; Gemini pairs by function name.
+  The provider keeps an id-to-name map so the shared agent loop stays unaware.
+- **The live API path is not yet verified** — no key was present when this landed.
+  The translation logic is unit-tested against fakes; the network call is not.
+
 ## [0.6.1] - 2026-07-27
 
 ### Fixed

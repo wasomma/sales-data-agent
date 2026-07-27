@@ -15,6 +15,9 @@ DB_PATH = DATA_DIR / "sales.duckdb"
 MAPPING_PATH = PROJECT_ROOT / "mapping.yaml"
 
 MODEL = os.getenv("SALES_AGENT_MODEL", "claude-opus-5")
+# Gemini via the API key, used when SALES_AGENT_PROVIDER=gemini. Distinct from
+# SALES_AGENT_AGY_MODEL, which names a model inside the Antigravity tenant.
+GEMINI_MODEL = os.getenv("SALES_AGENT_GEMINI_MODEL", "gemini-2.5-pro")
 MAX_TOKENS = int(os.getenv("SALES_AGENT_MAX_TOKENS", "16000"))
 
 # Hard caps for the SQL tool

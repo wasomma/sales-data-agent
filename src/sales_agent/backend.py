@@ -16,6 +16,27 @@ from rich.console import Console
 from .agent import EventHandler
 
 
+def _provider() -> str:
+    return (os.getenv("SALES_AGENT_PROVIDER") or "").lower()
+
+
+def _wants_api() -> bool:
+    """Whether the direct-API backend should handle this run.
+
+    Either asked for explicitly, or implied by having a key for the selected
+    provider: SALES_AGENT_PROVIDER=gemini with GEMINI_API_KEY set is enough on
+    its own, so the Gemini API path does not also need SALES_AGENT_BACKEND=api.
+    """
+    backend = os.getenv("SALES_AGENT_BACKEND")
+    if backend == "api":
+        return True
+    if backend is not None:
+        return False
+    if _provider() == "gemini":
+        return bool(os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY"))
+    return bool(os.getenv("ANTHROPIC_API_KEY"))
+
+
 def make_backend(console: Console | None = None, show_sql: bool = True,
                  on_event: EventHandler | None = None):
     """Return a backend exposing .ask(question) -> str and .reset()."""
@@ -26,7 +47,7 @@ def make_backend(console: Console | None = None, show_sql: bool = True,
     if backend == "agy":
         from .antigravity import AntigravityBackend
         return AntigravityBackend(console=console, show_sql=show_sql, on_event=on_event)
-    if backend == "api" or (backend is None and os.getenv("ANTHROPIC_API_KEY")):
+    if _wants_api():
         from .agent import SalesAgent
         return SalesAgent(console=console, show_sql=show_sql, on_event=on_event)
     from .claude_code import ClaudeCodeBackend
@@ -56,6 +77,6 @@ def backend_name() -> str:
         return "Demo — recorded answers"
     if backend == "agy":
         return "Gemini (Antigravity)"
-    if backend == "api" or (backend is None and os.getenv("ANTHROPIC_API_KEY")):
-        return "Anthropic API"
+    if _wants_api():
+        return "Gemini API" if _provider() == "gemini" else "Anthropic API"
     return "Claude subscription"
