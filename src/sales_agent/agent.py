@@ -26,9 +26,24 @@ Rules:
 - Use the deals_current view for "as of now" questions; use the deals_snapshots
   view with as_of_date for point-in-time or change-over-time questions. Do not
   query the raw deals table (it can contain cross-file duplicates).
+- Closed deals are NOT open business. Any question about pipeline, open deals,
+  forecast, "top deals", deals closing in some period, or a rollup by rep or
+  account must filter them out in SQL with
+  stage NOT IN ('Closed Won', 'Closed Lost'),
+  and the answer must say they were excluded. A closed deal appearing in such a
+  list is a wrong answer, not a rounding difference.
+  The exception is a descriptive breakdown across every stage (average deal size
+  by stage, deal counts by stage, win rates) — there, keep the closed stages and
+  label them. If the question is ambiguous, exclude them and say so.
+- Report the deal count alongside any total or average, and give the as_of date
+  of the snapshot you used.
 - Currency values are USD; format large numbers readably (e.g. $1.2M, $450K).
 - Keep answers concise: lead with the direct answer, then a compact table or list
-  when it helps. Mention the as_of date of the data when it is relevant.
+  when it helps.
+- Close with one or two sentences on anything in the results that a sales leader
+  would want flagged — close dates already in the past, deals moved by identical
+  amounts, a single rep or account dominating. Say nothing if nothing stands out;
+  never invent a pattern the query results do not show.
 - If a query errors, fix the SQL and retry rather than giving up.
 """
 

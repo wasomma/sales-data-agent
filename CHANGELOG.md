@@ -7,6 +7,8 @@ pointing at the push that shipped it.
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-07-27
+
 ### Added
 - **`GeminiProvider`** — Gemini through the google-genai SDK with native function
   calling, selected by `SALES_AGENT_PROVIDER=gemini`. This is the path llm.py was
@@ -23,8 +25,36 @@ pointing at the push that shipped it.
   settings, since Antigravity model ids are not API model ids.
 - Anthropic pairs a tool result to its call by id; Gemini pairs by function name.
   The provider keeps an id-to-name map so the shared agent loop stays unaware.
-- **The live API path is not yet verified** — no key was present when this landed.
-  The translation logic is unit-tested against fakes; the network call is not.
+
+### Changed
+- `SYSTEM_PROMPT` now states the open-deal rule explicitly: anything about
+  pipeline, forecast, "top deals" or a rep/account rollup must filter
+  `stage NOT IN ('Closed Won', 'Closed Lost')` in SQL and say so, with an
+  exception for descriptive breakdowns across every stage (average deal size by
+  stage keeps its closed rows). It also asks for a deal count beside every total,
+  the snapshot's as_of date, and a short closing note on anything a sales leader
+  would want flagged.
+
+  This was not cosmetic. Before the change, "top 10 largest deals closing in 2026"
+  came back with no stage filter, so a **Closed Won** deal took a slot and pushed
+  a genuinely open one off the list — a wrong answer, and the same defect seen
+  earlier on the `agy` path, so it is model-level rather than specific to either
+  Gemini surface.
+- Default `SALES_AGENT_GEMINI_MODEL` is now `gemini-3.1-pro-preview` (the model
+  the verification run actually used) instead of the never-exercised
+  `gemini-2.5-pro` guess. Bare `gemini-3.1-pro` is a 404 on this API.
+
+### Verified
+- **The live API path now runs.** All six demo questions completed against the
+  Gemini Developer API with no errors, 8–31s each, which exercises the
+  google-genai translation layer — including the id-to-name tool-result mapping —
+  against the real service rather than fakes.
+- Cross-checked against the committed Claude recording: after the prompt change,
+  five of six answers match on every figure and on which deals are listed. Q6
+  ("forecast to close this quarter") still differs in framing — Gemini reports
+  open forecast only and leads with the unweighted total, where Claude also
+  surfaces already-booked Closed Won revenue as a separate line. Numbers agree;
+  the emphasis does not.
 
 ## [0.6.1] - 2026-07-27
 

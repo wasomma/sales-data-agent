@@ -1,6 +1,6 @@
 [project]
 name = "sales-data-agent"
-version = "0.6.1"
+version = "0.7.0"
 description = "CLI agent that answers natural-language questions about sales data via text-to-SQL over DuckDB"
 requires-python = ">=3.11"
 dependencies = [
