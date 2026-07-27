@@ -5,7 +5,7 @@ All notable changes to this project are documented here. The format follows
 [Semantic Versioning](https://semver.org/). Each release is a git tag (`v0.x.y`)
 pointing at the push that shipped it.
 
-## [Unreleased]
+## [0.6.0] - 2026-07-27
 
 ### Added
 - **Gemini backend** (`SALES_AGENT_BACKEND=agy`) driving the headless Antigravity
@@ -25,6 +25,10 @@ pointing at the push that shipped it.
   `permissions.allow` as `mcp(sales/*)`.
 - `--output-format stream-json` is undocumented but supported, and is what makes
   the SQL panels work.
+- Verified against the synthetic dataset: stage totals match the Claude-recorded
+  answers exactly ($6.11M Prospecting / 25 deals, $19.7M open pipeline), and
+  follow-up questions resolve referents from earlier turns via `--conversation`.
+  Expect a slow first question (~90s, MCP cold start) and ~8s thereafter.
 
 ## [0.5.0] - 2026-07-26
 
