@@ -173,3 +173,10 @@ ingestion source, Vertex AI as the model path.
 4. **Subdomain:** the live instance gets a DuckDNS name deliberately
    unrelated to the demo's (mild obscurity for the real-data instance);
    exact name TBD at deploy time.
+5. **Codebase (2026-08-02):** Phases 1–2 deploy the private
+   `sales-data-service` codebase, not this repo — it already has per-user
+   sessions, fail-closed identity, and audit logging, which removes the
+   "Phase 2 code changes" from the roadmap below. This repo remains the
+   public, synthetic-data proof of concept and hosts the replay demo. The
+   Phase 1 runbook lives in the private repo (`deploy/VPS.md`); the
+   phase *infrastructure* plan in this document is unchanged.
