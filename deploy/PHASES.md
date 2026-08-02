@@ -161,13 +161,15 @@ ingestion source, Vertex AI as the model path.
 | Windows service wrapper | Phase 2 | Small |
 | Dockerfile + externalized state + IAP identity | Phase 3 | The real Phase 3 work |
 
-## Open questions
+## Decisions (resolved 2026-08-02)
 
-1. Gemini key owner's OK for calls from non-work infrastructure — the gate
-   for Phase 1 real data.
-2. Does the always-on Phase 2 PC exist, with admin rights (Python, firewall
-   rule, service creation)?
-3. Is LAN-only team access acceptable in Phase 2, or are teammates remote
-   (which pushes team access to Phase 3)?
-4. Subdomain for the Phase 1 live instance
-   (e.g. `wasomma-sales-live.duckdns.org`).
+1. **Key sign-off:** the key owner has already cleared calls from non-work
+   infrastructure. The remaining Phase 1 real-data gate is the technical
+   checklist only: `excluded_columns` set, no `.pptx` ingested.
+2. **Phase 2 PC:** exists, with admin rights (Python install, firewall rule,
+   service creation all possible). Phase 2 is unblocked on hardware.
+3. **Team access:** LAN-only is acceptable — teammates are on the office
+   network. Phase 2 proceeds with per-session conversations + in-app auth.
+4. **Subdomain:** the live instance gets a DuckDNS name deliberately
+   unrelated to the demo's (mild obscurity for the real-data instance);
+   exact name TBD at deploy time.
