@@ -1,5 +1,17 @@
 # Deployment phases — VPS → work PC → work cloud
 
+> **Status (2026-08-02): Phase 1 is live.** Delivered with the private
+> `sales-data-service` codebase per Decision 5 below — deployed on the VPS
+> behind TLS + basic auth at a deliberately undisclosed domain, verified
+> end-to-end (identity, audit, known-good figures) on synthetic data first,
+> then switched to real data built locally and shipped as a database file.
+> Also delivered same-day: report-style export ingestion, deck ingestion
+> into a queryable `slide_text` table, and a 12-question eval baseline.
+> Real data, real figures, and deployment specifics never enter this public
+> repo — the as-built details and progress log live in the private repo's
+> `deploy/PHASES.md`. Phase 2 is next (hardware confirmed); Phase 3 remains
+> blocked on the work GCP billing link.
+
 Three-phase path from "IT hasn't approved the cloud concept" to a properly
 sanctioned deployment in the work cloud. Each phase is a working daily tool;
 each successive phase moves the data and the runtime closer to work-controlled
